@@ -11319,6 +11319,30 @@ def _deep_health_checks(stream_check: dict | None = None) -> tuple[dict, bool]:
     return checks, healthy
 
 
+def _strip_copilot_model_groups(payload):
+    """HUMR: hide Copilot provider groups from the model picker payload."""
+    hidden_provider_ids = {"copilot", "github-copilot"}
+    payload["groups"] = [
+        group
+        for group in payload.get("groups", [])
+        if str(group.get("provider_id") or "") not in hidden_provider_ids
+    ]
+    hidden_model_prefixes = tuple(f"@{provider_id}:" for provider_id in hidden_provider_ids)
+    active_provider = str(payload.get("active_provider") or "")
+    default_model = str(payload.get("default_model") or "")
+    if active_provider in hidden_provider_ids or default_model.startswith(hidden_model_prefixes):
+        fallback_group = next(
+            (group for group in payload["groups"] if group.get("models")),
+            None,
+        )
+        fallback_models = fallback_group.get("models") if fallback_group else []
+        fallback_model = fallback_models[0] if fallback_models else None
+        payload["active_provider"] = fallback_group.get("provider_id") if fallback_group else None
+        if isinstance(fallback_model, dict) and fallback_model.get("id"):
+            payload["default_model"] = fallback_model["id"]
+    return payload
+
+
 def _handle_health(handler, parsed):
     deep = parse_qs(parsed.query or "").get("deep", [""])[0].lower() in {"1", "true", "yes", "on"}
     stream_check = _streams_lock_health()
@@ -12112,10 +12136,10 @@ def handle_get(handler, parsed) -> bool:
             if freshness == "session_visit":
                 result = get_available_models_for_session_visit()
                 diag.stage("response_serialize") if diag else None
-                return j(handler, result)
+                return j(handler, _strip_copilot_model_groups(result))
             if freshness:
                 return bad(handler, f"unknown models freshness: {freshness}", status=400)
-            return j(handler, get_available_models())
+            return j(handler, _strip_copilot_model_groups(get_available_models()))
         finally:
             if diag:
                 diag.finish()
