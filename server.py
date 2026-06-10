@@ -346,6 +346,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def log_request(self, code: str='-', size: str='-') -> None:
         """Structured JSON logs for each request."""
+        if str(code) == '200':
+            return
         import json as _json
         duration_ms = round((time.time() - getattr(self, '_req_t0', time.time())) * 1000, 1)
         remote = '-'
