@@ -1375,6 +1375,15 @@ def _configured_model_ids(raw_models: object) -> list[str]:
 def _configured_model_options(raw_models: object) -> list[dict[str, str]]:
     """Return picker option rows from supported config allowlist shapes."""
     labels: dict[str, str] = {}
+    if isinstance(raw_models, dict):
+        for key, value in raw_models.items():
+            if not isinstance(key, str):
+                continue
+            model_id = key.strip()
+            if not model_id or model_id in labels:
+                continue
+            if isinstance(value, str) and value.strip():
+                labels[model_id] = value.strip()
     if isinstance(raw_models, list):
         for item in raw_models:
             if not isinstance(item, dict):
