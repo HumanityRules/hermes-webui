@@ -42,23 +42,29 @@ async function api(path,opts={}){
       const requestPromise=(async()=>{
         const res=await fetch(url.href,{credentials:'include',headers:{'Content-Type':'application/json'},...fetchOpts});
         if(!res.ok){
-          // 401 means the auth session expired. Redirect to login so the user can
-          // re-authenticate. This is especially important for iOS PWA (standalone mode)
-          // and for subpath mounts like /hermes/, where /login escapes to the site root.
+          // 401 means the auth session expired. HUMR's policy proxy returns a
+          // same-origin 401 for API/fetch requests plus X-HUMR-Auth-URL so the UI
+          // can perform a top-level auth navigation instead of following a
+          // cross-origin fetch redirect that CSP blocks. Upstream fallback stays
+          // 'login' (relative, so subpath mounts like /hermes/ keep working).
           if(res.status===401){
-            // #5578: if we're ALREADY on the login page, appending
-            // window.location.pathname+search (which contains ?next=…) into a
-            // fresh next= wraps the login URL into itself and re-encodes it —
-            // exponential URL growth on each expired-auth bounce until the tab
-            // breaks. On the login page, just reload login WITHOUT a next (the
-            // page preserves its own inner next); elsewhere, capture the path.
             if(redirect401){
-              // Already on the login page? Reload login WITHOUT a next.
-              const _p=(window.location.pathname||'').replace(/\/+$/,'');
-              if(/(?:^|\/)login$/.test(_p)){
-                window.location.href='login';
+              const authUrl=res.headers.get('x-humr-auth-url');
+              if(authUrl){
+                window.location.href=authUrl;
               }else{
-                window.location.href='login?next='+encodeURIComponent(window.location.pathname+window.location.search);
+                // #5578: if we're ALREADY on the login page, appending
+                // window.location.pathname+search (which contains ?next=…) into a
+                // fresh next= wraps the login URL into itself and re-encodes it —
+                // exponential URL growth on each expired-auth bounce until the tab
+                // breaks. On the login page, just reload login WITHOUT a next (the
+                // page preserves its own inner next); elsewhere, capture the path.
+                const _p=(window.location.pathname||'').replace(/\/+$/,'');
+                if(/(?:^|\/)login$/.test(_p)){
+                  window.location.href='login';
+                }else{
+                  window.location.href='login?next='+encodeURIComponent(window.location.pathname+window.location.search);
+                }
               }
             }
             // Callers can opt out of navigation and handle the unauthenticated state themselves.
