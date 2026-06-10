@@ -19476,6 +19476,12 @@ def _handle_live_models(handler, parsed):
         from api.config import _resolve_provider_alias
         provider = _resolve_provider_alias(provider)
 
+        # HUMR: skip live discovery for Bedrock — we ship a curated model list
+        # via providers.bedrock.models in config.yaml and don't want every
+        # foundation model in the account showing up in the dropdown.
+        if provider == "bedrock":
+            return j(handler, {"provider": provider, "models": [], "count": 0})
+
         cache_key = _live_models_cache_key(provider)
         cached = _get_cached_live_models(cache_key)
         if cached is not None:
