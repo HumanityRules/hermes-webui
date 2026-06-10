@@ -7619,7 +7619,13 @@ def get_available_models(*, prefer_cache: bool = False, force_refresh: bool = Fa
                     ):
                         cfg_models = provider_cfg["models"]
                         if isinstance(cfg_models, dict):
-                            raw_models = [{"id": k, "label": k} for k in cfg_models.keys()]
+                            raw_models = [
+                                {
+                                    "id": k,
+                                    "label": v if isinstance(v, str) and v.strip() else k,
+                                }
+                                for k, v in cfg_models.items()
+                            ]
                         elif isinstance(cfg_models, list):
                             raw_models = [{"id": k["id"] if isinstance(k, dict) else k,
                                             "label": k.get("label", k["id"]) if isinstance(k, dict) else k}
