@@ -7916,6 +7916,14 @@ function switchSettingsSection(name,opts){
     const pluginsTabBtn=document.querySelector('[data-settings-section="plugins"]');
     if(pluginsTabBtn && pluginsTabBtn.style.display==='none') section='conversation';
   }
+  // HUMR: Providers section is hidden (its menu button has display:none). Deep
+  // links such as the provider quota chip still call switchSettingsSection
+  // ('providers'); fall back to Conversation so they don't render an
+  // unreachable pane. Mirrors the plugins guard above.
+  if(section==='providers'){
+    const providersTabBtn=document.querySelector('[data-settings-section="providers"]');
+    if(providersTabBtn && providersTabBtn.style.display==='none') section='conversation';
+  }
   _settingsSection=section;
   _currentSettingsSection=section;
   const map={conversation:'Conversation',appearance:'Appearance',preferences:'Preferences',providers:'Providers',plugins:'Plugins',extensions:'Extensions',system:'System',help:'Help'};
