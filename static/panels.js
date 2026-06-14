@@ -7460,8 +7460,10 @@ let _settingsSkinOnOpen = null; // track skin at open time for discard revert
 let _settingsFontSizeOnOpen = null; // track font size at open time for discard revert
 let _settingsHermesDefaultModelOnOpen = '';
 let _settingsHermesDefaultModelProviderOnOpen = null;
-let _settingsSection = 'conversation';
-let _currentSettingsSection = 'conversation';
+// HUMR: Conversation section is hidden, so Appearance is the default landing
+// section and the fallback target throughout switchSettingsSection().
+let _settingsSection = 'appearance';
+let _currentSettingsSection = 'appearance';
 let _settingsIndex = null;
 let _settingsIndexPromise = null;
 let _settingsSearchSeq = 0;
@@ -7906,23 +7908,26 @@ function switchSettingsSection(name,opts){
     _settingsSection = name;
     return;
   }
-  let section=(name==='appearance'||name==='preferences'||name==='providers'||name==='plugins'||name==='extensions'||name==='system'||name==='help')?name:'conversation';
+  // HUMR: Conversation section is hidden, so it is dropped from the allow-list
+  // and the fallback default is Appearance instead of Conversation. An explicit
+  // switchSettingsSection('conversation') therefore also lands on Appearance.
+  let section=(name==='appearance'||name==='preferences'||name==='providers'||name==='plugins'||name==='extensions'||name==='system'||name==='help')?name:'appearance';
   // Deep-linking to the Plugins pane when the tab is hidden (no plugins
-  // installed, #3457) falls back to Conversation. Resolve this BEFORE toggling
+  // installed, #3457) falls back to Appearance. Resolve this BEFORE toggling
   // panes/sidebar/dropdown below so every downstream selection uses the
   // corrected section — otherwise the plugins pane would still render active
   // but empty. (#3457)
   if(section==='plugins'){
     const pluginsTabBtn=document.querySelector('[data-settings-section="plugins"]');
-    if(pluginsTabBtn && pluginsTabBtn.style.display==='none') section='conversation';
+    if(pluginsTabBtn && pluginsTabBtn.style.display==='none') section='appearance';
   }
   // HUMR: Providers section is hidden (its menu button has display:none). Deep
   // links such as the provider quota chip still call switchSettingsSection
-  // ('providers'); fall back to Conversation so they don't render an
+  // ('providers'); fall back to Appearance so they don't render an
   // unreachable pane. Mirrors the plugins guard above.
   if(section==='providers'){
     const providersTabBtn=document.querySelector('[data-settings-section="providers"]');
-    if(providersTabBtn && providersTabBtn.style.display==='none') section='conversation';
+    if(providersTabBtn && providersTabBtn.style.display==='none') section='appearance';
   }
   _settingsSection=section;
   _currentSettingsSection=section;
