@@ -759,6 +759,8 @@ const LOCALES = {
     plugins_enable_toggle: 'Enable',
     settings_plugins_meta: 'View installed Hermes plugins and the lifecycle hooks they register. This panel is read-only.',
     settings_plugins_empty: 'No Hermes plugins are currently visible. Install or enable plugins from the Hermes CLI/config to see them here.',
+    settings_plugins_only_enabled: 'Only enabled',
+    plugins_none_enabled: 'No enabled plugins. Uncheck "Only enabled" to see all installed plugins.',
     plugins_unnamed: 'Unnamed plugin',
     plugins_no_description: 'No description provided.',
     plugins_no_hooks: 'No registered lifecycle hooks',
