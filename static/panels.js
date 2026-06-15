@@ -10501,20 +10501,42 @@ function _partitionPluginsActiveFirst(plugins){
   return active.concat(inactive);
 }
 
+// HUMR: a plugin counts as "enabled" for the "Only enabled" filter when it is
+// actively loaded. Defers to _pluginActivationState so the filter bucket
+// always matches the badge/sort (incl. is_active_provider precedence).
+function _pluginIsEnabled(plugin){
+  return _pluginActivationState(plugin)!=='disabled';
+}
+
+let _pluginsOnlyEnabledBound=false;
+
 async function loadPluginsPanel(){
   const list=$('pluginsList');
   const empty=$('pluginsEmpty');
   if(!list) return;
+  const onlyEnabledEl=$('pluginsOnlyEnabled');
+  // Re-render (no refetch needed) whenever the filter toggles.
+  if(onlyEnabledEl && !_pluginsOnlyEnabledBound){
+    onlyEnabledEl.addEventListener('change', function(){ loadPluginsPanel(); });
+    _pluginsOnlyEnabledBound=true;
+  }
+  const onlyEnabled=onlyEnabledEl ? !!onlyEnabledEl.checked : false;
   try{
     const data=await api('/api/plugins');
-    const plugins=Array.isArray((data||{}).plugins)?data.plugins:[];
+    const allPlugins=Array.isArray((data||{}).plugins)?data.plugins:[];
     // Hide the Plugins tab when no plugins are installed (#3457)
     const tabBtn=document.querySelector('[data-settings-section="plugins"]');
     if(tabBtn) tabBtn.style.display=(data&&data.empty)?'none':'';
+    const plugins=onlyEnabled?allPlugins.filter(_pluginIsEnabled):allPlugins;
     list.innerHTML='';
     if(plugins.length===0){
       list.style.display='none';
-      if(empty) empty.style.display='';
+      if(empty){
+        empty.style.display='';
+        empty.textContent=(onlyEnabled && allPlugins.length>0)
+          ? (t('plugins_none_enabled')||'No enabled plugins. Uncheck "Only enabled" to see all installed plugins.')
+          : t('settings_plugins_empty');
+      }
       return;
     }
     if(empty) empty.style.display='none';

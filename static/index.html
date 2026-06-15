@@ -1474,6 +1474,10 @@
                 <div class="settings-section-title" data-i18n="settings_plugins_title">Plugins</div>
                 <div class="settings-section-meta" data-i18n="settings_plugins_meta">View installed Hermes plugins and the lifecycle hooks they register. This panel is read-only.</div>
               </div>
+              <label class="plugins-filter-toggle" style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer;white-space:nowrap">
+                <input type="checkbox" id="pluginsOnlyEnabled" checked>
+                <span data-i18n="settings_plugins_only_enabled">Only enabled</span>
+              </label>
             </div>
             <div id="pluginsList" style="display:flex;flex-direction:column;margin-top:4px">
               <!-- Populated dynamically by loadPluginsPanel() -->
