@@ -2816,6 +2816,7 @@ from api.config import (
     persisted_speech_settings_keys,
     save_settings,
     SETTINGS_FILE,
+    boot_tab_settings_json,
     set_hermes_default_model,
     canonical_model_provider_lane,
     model_with_provider_context,
@@ -11952,8 +11953,12 @@ def handle_get(handler, parsed) -> bool:
             # The disk read + process-constant token substitutions are cached;
             # only the per-session CSRF token and per-request extension tags are
             # applied here (see _render_index_shell_base).
+            # HUMR: boot tab settings are substituted per-request (not in the
+            # cached base) so sidebar tab visibility changes apply on reload.
             html = _render_index_shell_base().replace(
                 "__CSRF_TOKEN_JSON__", json.dumps(csrf_token)
+            ).replace(
+                "__BOOT_TAB_SETTINGS_JSON__", boot_tab_settings_json()
             )
             return t(
                 handler,

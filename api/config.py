@@ -9752,6 +9752,41 @@ def save_settings(settings: dict) -> dict:
     return current
 
 
+def _sanitize_tab_panel_list(value: object) -> list[str]:
+    """Strip fixed tabs (chat/settings), blanks, non-strings, and duplicates, preserving order."""
+    if not isinstance(value, list):
+        return []
+    seen: set[str] = set()
+    cleaned: list[str] = []
+    for item in value:
+        if not isinstance(item, str):
+            continue
+        item = item.strip()
+        if not item or item in {"chat", "settings"} or item in seen:
+            continue
+        seen.add(item)
+        cleaned.append(item)
+    return cleaned
+
+
+def boot_tab_settings_json() -> str:
+    """Serialize the active profile's sidebar tab visibility/order for pre-paint injection into index.html.
+
+    The WebUI's flash-prevention script runs synchronously before first paint, but
+    upstream only reads localStorage. HUMR ships a non-empty ``hidden_tabs`` default
+    (server-side), so a browser whose localStorage is not yet primed would show the
+    hidden tabs until an async ``/api/settings`` consumer ran. Injecting the
+    server-authoritative value lets the pre-paint script hide them immediately.
+    """
+    settings = load_settings()
+    payload = {
+        "hidden_tabs": _sanitize_tab_panel_list(settings.get("hidden_tabs")),
+        "tab_order": _sanitize_tab_panel_list(settings.get("tab_order")),
+    }
+    # Escape '<' so the JSON literal can't terminate the inline <script> it lands in.
+    return json.dumps(payload, ensure_ascii=False).replace("<", "\\u003c")
+
+
 # Apply saved settings on startup (override env-derived defaults)
 # Exception: if HERMES_WEBUI_DEFAULT_WORKSPACE is explicitly set in the
 # environment, it wins over whatever settings.json has stored.  Persisted

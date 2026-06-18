@@ -302,13 +302,16 @@ def _run_panels_driver(
             pass
 
 def test_backend_round_trip_and_validation(monkeypatch, tmp_path):
-    """hidden_tabs defaults to [], saves/reloads, rejects non-list, filters empty strings."""
+    """hidden_tabs reflects the configured default, saves/reloads, rejects non-list, filters empty strings."""
     import api.config as config
     settings_path = tmp_path / "settings.json"
     monkeypatch.setattr(config, "SETTINGS_FILE", settings_path)
 
     loaded = config.load_settings()
-    assert loaded["hidden_tabs"] == [], "default must be empty list"
+    # HUMR ships a non-empty hidden_tabs default (see _SETTINGS_DEFAULTS); assert
+    # against the source of truth rather than upstream's empty-list assumption.
+    assert loaded["hidden_tabs"] == config._SETTINGS_DEFAULTS["hidden_tabs"], \
+        "default must match the configured hidden_tabs"
     assert loaded["tab_order"] == [], "tab order default must be empty list"
 
     saved = config.save_settings({"hidden_tabs": ["kanban", "insights"]})
@@ -552,3 +555,55 @@ def test_profile_switch_reconciles_tab_order():
         "profile-switch background refresh must store tab_order for the new profile"
     assert "_applyTabOrder" in bg_body, \
         "profile-switch background refresh must apply tab ordering"
+
+
+def test_server_injected_bootstrap_drives_prepaint_hide():
+    """The server renders the per-profile hidden_tabs/tab_order into <head> so the
+    pre-paint script hides configured tabs on first load — not after an async
+    /api/settings round-trip. HUMR ships a non-empty hidden_tabs default, so a
+    localStorage-only pre-paint flashed the hidden tabs until settings loaded."""
+    # Server placeholder + global must exist, and the global must be defined in
+    # <head> (before the body pre-paint script can read it).
+    assert "__BOOT_TAB_SETTINGS_JSON__" in INDEX_HTML, \
+        "index.html must carry the server placeholder for tab bootstrap"
+    head_end = INDEX_HTML.find("</head>")
+    global_pos = INDEX_HTML.find("window.__HERMES_TAB_BOOTSTRAP__")
+    assert 0 <= global_pos < head_end, \
+        "the bootstrap global must be defined in <head>, before first paint"
+
+    # The body flash-prevention script must prefer the server value, keep the
+    # localStorage fallback, and seed localStorage so boot.js doesn't un-hide.
+    body_start = INDEX_HTML.find("Flash-prevention")
+    body_script = INDEX_HTML[body_start: INDEX_HTML.find("</script>", body_start)]
+    assert "__HERMES_TAB_BOOTSTRAP__" in body_script, \
+        "pre-paint script must read the server-injected bootstrap"
+    assert "hermes-webui-hidden-tabs" in body_script and "hermes-webui-tab-order" in body_script, \
+        "pre-paint script must keep the localStorage fallback/seed"
+
+
+def test_sanitize_tab_panel_list():
+    """The boot sanitizer mirrors the save-time validator: fixed tabs, blanks,
+    non-strings, and duplicates are dropped while order is preserved."""
+    import api.config as config
+    assert config._sanitize_tab_panel_list(
+        ["kanban", "chat", "kanban", " logs ", "", None, "settings"]
+    ) == ["kanban", "logs"]
+    assert config._sanitize_tab_panel_list("not-a-list") == []
+    assert config._sanitize_tab_panel_list(None) == []
+
+
+def test_boot_tab_settings_json_round_trip_and_escapes(monkeypatch, tmp_path):
+    """boot_tab_settings_json reflects the active profile's settings, sanitized,
+    and escapes '<' so a tab id can't break out of the inline <script>."""
+    import api.config as config
+    settings_path = tmp_path / "settings.json"
+    monkeypatch.setattr(config, "SETTINGS_FILE", settings_path)
+
+    config.save_settings({"hidden_tabs": ["kanban", "logs"], "tab_order": ["logs", "tasks"]})
+    payload = json.loads(config.boot_tab_settings_json())
+    assert payload["hidden_tabs"] == ["kanban", "logs"]
+    assert payload["tab_order"] == ["logs", "tasks"]
+
+    config.save_settings({"hidden_tabs": ["a<b"]})
+    raw = config.boot_tab_settings_json()
+    assert "\\u003c" in raw and "<" not in raw
