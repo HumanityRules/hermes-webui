@@ -9171,7 +9171,7 @@ _SETTINGS_DEFAULTS = {
     "show_titlebar_profile": False,  # show profile switcher in app titlebar (opt-in)
     "hide_composer_voice_mode": False,  # hide hands-free voice-mode button in composer footer
     "hide_composer_yolo": False,  # hide YOLO chip in composer footer
-    "hide_composer_profile": False,  # hide profile chip in composer footer
+    "hide_composer_profile": True,  # hide profile chip in composer footer
     "hide_composer_workspace": False,  # hide workspace controls in composer footer/mobile config panel
     "hide_composer_mobile_config": False,  # hide mobile composer config button
     "hide_composer_model": False,  # hide model chip in composer footer/mobile config panel
