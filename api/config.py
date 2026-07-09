@@ -8994,7 +8994,7 @@ _SETTINGS_DEFAULTS = {
     "hide_composer_model": False,  # hide model chip in composer footer/mobile config panel
     "hide_composer_quota_chip": False,  # hide provider quota chip in composer footer
     "hide_composer_reasoning": False,  # hide reasoning chip in composer footer/mobile config panel
-    "hide_composer_toolsets": False,  # hide toolsets chip in composer footer
+    "hide_composer_toolsets": True,  # hide toolsets chip in composer footer
     "hide_composer_status": False,  # hide status text in composer footer
     "hide_composer_context": False,  # hide context indicator in composer footer/mobile config panel
     "hide_composer_bg_badge": False,  # hide background-jobs badge in composer footer
