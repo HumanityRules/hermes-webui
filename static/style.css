@@ -2082,9 +2082,22 @@
   .clarify-card.collapsed .clarify-inner{max-height:48px;overflow:hidden;padding:10px 14px;}
   .clarify-card.collapsed .clarify-header{margin-bottom:0;}
   .clarify-card.collapsed .clarify-question,.clarify-card.collapsed .clarify-choices,.clarify-card.collapsed .clarify-response,.clarify-card.collapsed .clarify-hint{display:none;}
-  /* Left rail (desktop primary navigation) */
-  .rail{display:none;width:48px;flex-shrink:0;flex-direction:column;align-items:center;gap:4px;padding:8px 0;background:var(--sidebar);border-right:1px solid var(--border);}
-  .rail-btn{width:36px;height:36px;border-radius:8px;border:none;background:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;transition:color .15s,background .15s;flex-shrink:0;padding:0;}
+  /* Left rail (desktop primary navigation). Each entry is an icon plus a
+     persistent text label, so the rail is a column of full-width rows rather
+     than a strip of icon squares. Row height stays 36px: the stack grows
+     sideways, not downward, and a rail with every tab enabled still fits a
+     short viewport without scrolling. The 6px horizontal padding is what the
+     `.active::before` accent bar reaches back across to sit flush with the
+     rail's left edge. */
+  .rail{display:none;width:140px;flex-shrink:0;flex-direction:column;align-items:stretch;gap:4px;padding:8px 6px;background:var(--sidebar);border-right:1px solid var(--border);}
+  .rail-btn{width:auto;height:36px;border-radius:8px;border:none;background:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:flex-start;gap:10px;position:relative;transition:color .15s,background .15s;flex-shrink:0;padding:0 10px;}
+  /* Fixed 20px icon slot. Icons ship at mixed intrinsic sizes (Profiles is 18);
+     centred squares hid that, but a left-aligned row would start each label at
+     a different x. */
+  .rail-btn > svg{flex:0 0 20px;height:20px;}
+  /* Labels ellipsize rather than wrap or widen the rail — a long localized
+     string shortens instead of reflowing the whole layout. */
+  .rail-label{font-size:12.5px;font-weight:500;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .rail-btn:hover{color:var(--text);background:var(--hover-bg);}
   .rail-btn.active{color:var(--accent-text);background:var(--accent-bg);}
 .rail-btn.active::before{content:'';position:absolute;left:-6px;top:50%;transform:translateY(-50%);width:3px;height:16px;background:var(--accent);border-radius:0 2px 2px 0;}
@@ -2114,8 +2127,16 @@
      of the trigger so it doesn't extend past the viewport edge. */
   .has-tooltip--left::after{left:auto;right:calc(100% + 8px);top:50%;transform:translateY(-50%);}
   @media(prefers-reduced-motion:reduce){.has-tooltip::after{transition:none;transition-delay:0s;}}
+  /* Rail buttons keep `has-tooltip` + `data-tooltip` (they still drive the
+     mobile `.sidebar-nav` copies and the accessible name), but the desktop
+     rail suppresses the visual tooltip: the label is already on screen, so
+     the hover card would only repeat it. */
+  .rail-btn.has-tooltip::after{content:none;}
 .rail-spacer{flex:1;min-height:8px;}
-.rail .nav-tab{flex:0 0 auto;padding:0;font-size:inherit;border-bottom:none;overflow:visible;}
+/* `.nav-tab` (0,1,0) is declared after `.rail-btn` (0,1,0) and would otherwise
+   win on `justify-content`, re-centering the icon and stranding the label; the
+   icon-plus-label row layout lives here, at (0,2,0), where it outranks both. */
+.rail .nav-tab{flex:0 0 auto;padding:0 10px;font-size:inherit;border-bottom:none;overflow:visible;justify-content:flex-start;}
 /* Note: previously this block had `.rail .nav-tab:hover::after { content: none }`
    to suppress the legacy `.nav-tab:hover::after { content: attr(data-label) }`
    tooltip (line ~681 below) on the desktop rail. After v0.51.17 migrated the
@@ -2131,6 +2152,9 @@
   .dashboard-external-badge{position:absolute;right:5px;top:5px;width:9px;height:9px;border-radius:2px;border:1px solid var(--accent);background:var(--sidebar);box-shadow:0 0 0 2px var(--sidebar);opacity:.95;}
   .dashboard-external-badge::after{content:'';position:absolute;right:-2px;top:-2px;width:5px;height:5px;border-top:1.5px solid var(--accent);border-right:1.5px solid var(--accent);}
   .sidebar-nav .dashboard-external-badge{right:8px;top:7px;width:8px;height:8px;}
+  /* Pin the external-link badge to the icon. Anchored right, it would drift to
+     the far end of the now-wide row, reading as unrelated to the icon. */
+  .rail .dashboard-external-badge{left:24px;right:auto;top:5px;}
   @media(min-width:641px){.rail{display:flex;}.sidebar > .sidebar-nav{display:none;}}
   /* Sidebar navigation tabs */
   .sidebar-nav{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;padding:6px 8px 0;gap:2px;}
