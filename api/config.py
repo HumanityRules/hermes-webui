@@ -5101,6 +5101,30 @@ def _configured_model_badges_from_static_catalog(
     return badges
 
 
+# HUMR: Bedrock is a platform capability, not a credential fact. Hermes treats a
+# reachable AWS credential chain as "Bedrock available", but every ECS task gets
+# AWS_CONTAINER_CREDENTIALS_RELATIVE_URI injected, so that test is always true in
+# a HUMR deployment and Bedrock leaks into every model picker. The authority is
+# HUMR_PLATFORM_CAPABILITIES — the comma-separated grant CP resolves from the
+# owning org and that also puts bedrock:* on the task role. Unset means nothing
+# is granted.
+_HUMR_BEDROCK_CAPABILITY = "bedrock-runtime"
+_HUMR_BEDROCK_PROVIDER_IDS = frozenset({"bedrock", "aws-bedrock"})
+
+
+def humr_bedrock_capability_granted() -> bool:
+    """HUMR: whether this deployment may offer AWS Bedrock models."""
+    granted = os.environ.get("HUMR_PLATFORM_CAPABILITIES", "")
+    return _HUMR_BEDROCK_CAPABILITY in {slug.strip() for slug in granted.split(",")}
+
+
+def humr_drop_ungranted_bedrock(detected_providers: set[str]) -> set[str]:
+    """HUMR: strip Bedrock from picker provider detection unless the org holds the grant."""
+    if humr_bedrock_capability_granted():
+        return detected_providers
+    return detected_providers - _HUMR_BEDROCK_PROVIDER_IDS
+
+
 def _minimal_static_models_catalog() -> dict:
     """Return the emergency one-model fallback for /api/models."""
     try:
@@ -5339,6 +5363,10 @@ def _static_models_catalog_without_live_probes() -> dict:
                 for provider_id in detected_providers
                 if provider_id
             }
+
+        # HUMR: post-canonicalisation is the one place every detection path has
+        # converged on, so gating here covers all of them.
+        detected_providers = humr_drop_ungranted_bedrock(detected_providers)
 
         groups: list[dict] = []
         for pid in sorted(detected_providers):
@@ -7320,6 +7348,10 @@ def get_available_models(*, prefer_cache: bool = False, force_refresh: bool = Fa
                 _c = _canonicalise_provider_id(_pid) or _pid
                 _canonicalised_detected.add(_c)
             detected_providers = _canonicalised_detected
+
+        # HUMR: post-canonicalisation is the one place every detection path has
+        # converged on, so gating here covers all of them.
+        detected_providers = humr_drop_ungranted_bedrock(detected_providers)
 
         try:
             _moa_cfg = cfg.get("moa") if isinstance(cfg, dict) else None
