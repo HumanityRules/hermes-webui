@@ -11320,9 +11320,14 @@ def _deep_health_checks(stream_check: dict | None = None) -> tuple[dict, bool]:
     return checks, healthy
 
 
-def _strip_copilot_model_groups(payload):
-    """HUMR: hide Copilot provider groups from the model picker payload."""
+def _strip_hidden_model_groups(payload):
+    """HUMR: hide provider groups this deployment must not offer in the model picker."""
     hidden_provider_ids = {"copilot", "github-copilot"}
+    # A models_cache.json written before the org lost (or never held) the
+    # bedrock-runtime grant lives on in the persistent root, so the detection
+    # gate in api.config alone would still serve Bedrock from a warm cache.
+    if not api_config.humr_bedrock_capability_granted():
+        hidden_provider_ids |= {"bedrock", "aws-bedrock"}
     payload["groups"] = [
         group
         for group in payload.get("groups", [])
@@ -12141,10 +12146,10 @@ def handle_get(handler, parsed) -> bool:
             if freshness == "session_visit":
                 result = get_available_models_for_session_visit()
                 diag.stage("response_serialize") if diag else None
-                return j(handler, _strip_copilot_model_groups(result))
+                return j(handler, _strip_hidden_model_groups(result))
             if freshness:
                 return bad(handler, f"unknown models freshness: {freshness}", status=400)
-            return j(handler, _strip_copilot_model_groups(get_available_models()))
+            return j(handler, _strip_hidden_model_groups(get_available_models()))
         finally:
             if diag:
                 diag.finish()
