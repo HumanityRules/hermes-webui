@@ -2576,7 +2576,7 @@
   }
   .empty-state h2{font-size:20px;color:var(--text);font-weight:700;letter-spacing:-.02em;}
   .empty-state p{font-size:14px;text-align:center;max-width:320px;}
-  .suggestion-grid{display:flex;flex-direction:column;gap:8px;margin-top:12px;width:100%;max-width:380px;}
+  .suggestion-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;width:100%;max-width:560px;}
   .suggestion{padding:12px 14px;background:var(--input-bg);border:1px solid var(--border);border-radius:10px;font-size:13px;color:var(--muted);cursor:pointer;transition:all .15s;text-align:left;}
   .suggestion:hover{background:var(--accent-bg);color:var(--text);border-color:var(--accent-bg);transform:translateX(2px);}
   /* ── Composer ── */
@@ -3212,7 +3212,7 @@
     /* Empty state */
     .empty-state h2{font-size:18px;}
     .empty-state p{font-size:13px;}
-    .suggestion-grid{max-width:100%!important;}
+    .suggestion-grid{max-width:100%!important;grid-template-columns:1fr;}
     .suggestion{font-size:12px;padding:10px 12px;}
   }
 
