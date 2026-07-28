@@ -1314,9 +1314,10 @@ const LOCALES = {
     // Empty state
     empty_title: 'What can I help with?',
     empty_subtitle: 'Ask anything, run commands, explore files, or manage your scheduled tasks.',
-    suggest_files: 'What files are in this workspace?',
-    suggest_schedule: "What's on my schedule today?",
-    suggest_plan: 'Help me plan a small project.',
+    suggest_someone: 'Make something for someone',
+    suggest_event: 'Bring an event to life',
+    suggest_obsession: 'Turn an obsession into something live',
+    suggest_surprise: 'Surprise me',
     // onboarding
     onboarding_badge: 'FIRST RUN',
     onboarding_title: 'Welcome to Hermes Web UI',
