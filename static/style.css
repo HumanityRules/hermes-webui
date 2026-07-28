@@ -2535,23 +2535,41 @@
   @keyframes pulse{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:.8;transform:scale(1)}}
   .empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:40px;color:var(--muted);}
   .empty-state.no-suggestions .suggestion-grid{display:none}
-  /* Empty-state brand mark: a free-breathing winged caduceus with a soft
-     "spirit" bloom behind it — no app-icon tile. Glow + mark gradient are
-     tuned separately for dark vs light themes (see --logo-glow / .hm-g* below). */
-  .empty-logo{position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:10px;background:none;border:none;border-radius:0;box-shadow:none;}
-  .empty-logo::before{content:"";position:absolute;left:50%;top:50%;width:190px;height:190px;transform:translate(-50%,-50%);border-radius:50%;background:var(--logo-glow);z-index:0;pointer-events:none;}
-  .empty-logo svg{position:relative;z-index:1;width:88px;height:88px;display:block;}
-  /* Light themes (default :root): deeper, richer gradient holds contrast on
-     a pale background; cooler, restrained bloom. */
-  :root .empty-logo .hm-g0{stop-color:#0AA6CC;}
-  :root .empty-logo .hm-g1{stop-color:#1E63D6;}
-  :root{--logo-glow:radial-gradient(circle,rgba(30,99,214,0.15) 0%,rgba(10,166,204,0.07) 45%,transparent 70%);}
-  /* Dark themes: bright cyan→blue mark with a luminous bloom. */
-  :root.dark .empty-logo .hm-g0{stop-color:#08EBF1;}
-  :root.dark .empty-logo .hm-g1{stop-color:#3889FD;}
-  :root.dark{--logo-glow:radial-gradient(circle,rgba(8,235,241,0.20) 0%,rgba(56,137,253,0.15) 38%,transparent 72%);}
+  /* Empty-state brand mark: an ascii globe rendered by static/globe.js into the
+     #emptyGlobe host, with a soft bloom behind it — no app-icon tile.
+     --globe-lines is the single source of truth for the mark: globe.js reads it
+     to size its character grid, and the box below is the same grid expressed in
+     the host's own type metrics (2 chars wide and 1.2 line-heights tall per
+     line). Because the box lives here rather than in script, it is reserved at
+     first paint and the empty state does not reflow when the globe arrives.
+     Scale the whole mark with font-size; change its resolution with
+     --globe-lines. Glow + glyph color are tuned separately for dark vs light. */
+  .empty-globe{--globe-lines:25;position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:10px;cursor:grab;
+    font:700 9.6px/1.2 "IBM Plex Mono","Cascadia Mono","SF Mono","Fira Mono","Roboto Mono","Source Code Pro","JetBrains Mono","Consolas","Menlo","Liberation Mono","DejaVu Sans Mono","Courier New",monospace;
+    width:calc(var(--globe-lines) * 2ch);height:calc(var(--globe-lines) * 1.2em);}
+  .empty-globe:active{cursor:grabbing;}
+  /* Deliberately smaller than the globe: the bloom sits behind the character
+     grid and shows through its gaps, lighting the planet from within rather
+     than ringing it. Sized in px so it stays a core, not a halo, as the mark
+     scales. */
+  .empty-globe::before{content:"";position:absolute;left:50%;top:50%;width:190px;height:190px;transform:translate(-50%,-50%);border-radius:50%;background:var(--logo-glow);z-index:0;pointer-events:none;}
+  .empty-globe__ascii{position:relative;z-index:1;margin:0;padding:0;width:100%;height:100%;white-space:pre;user-select:none;color:var(--globe-ink);
+    /* Ligatures, kerning and sub-pixel positioning all shift glyph advances,
+       which shears the character grid. */
+    font-feature-settings:"liga" 0,"clig" 0,"dlig" 0,"kern" 0,"calt" 0;font-kerning:none;font-variant-ligatures:none;text-rendering:geometricPrecision;-webkit-text-size-adjust:none;text-size-adjust:none;}
+  /* The color wash sits under the glyphs, square and matched to their height. */
+  .empty-globe__color{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:0;pointer-events:none;opacity:.2;}
+  /* Light themes (default :root): deeper ink holds contrast on a pale
+     background; cooler, restrained bloom. */
+  :root{--globe-ink:#1E63D6;--logo-glow:radial-gradient(circle,rgba(30,99,214,0.15) 0%,rgba(10,166,204,0.07) 45%,transparent 70%);}
+  /* Dark themes: brighter blue glyphs with a luminous bloom. */
+  :root.dark{--globe-ink:#3889FD;--logo-glow:radial-gradient(circle,rgba(8,235,241,0.20) 0%,rgba(56,137,253,0.15) 38%,transparent 72%);}
+  @media (max-width:640px){
+    .empty-globe{font-size:7.2px;}
+    .empty-globe::before{width:150px;height:150px;}
+  }
   @media (prefers-reduced-motion: no-preference){
-    .empty-logo svg{animation:emptyLogoRise .5s ease-out both;}
+    .empty-globe{animation:emptyLogoRise .5s ease-out both;}
     @keyframes emptyLogoRise{from{opacity:0;transform:translateY(6px) scale(.96);}to{opacity:1;transform:none;}}
   }
   .empty-state h2{font-size:20px;color:var(--text);font-weight:700;letter-spacing:-.02em;}
