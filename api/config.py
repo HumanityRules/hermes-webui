@@ -8987,7 +8987,7 @@ _SETTINGS_DEFAULTS = {
     "show_webhook_sessions": False,  # surface webhook sessions in the sidebar (subordinate to show_cli_sessions)
     "show_previous_messaging_sessions": False,  # show older Telegram/Discord/etc. reset segments
     "sync_to_insights": False,  # mirror WebUI token usage to state.db for /insights
-    "check_for_updates": True,  # check if webui/agent repos are behind upstream
+    "check_for_updates": False,  # HumR-managed deployments do not offer upstream updates
     "update_channel": "stable",  # stable | experimental — which release stream to track (stable = soaked/promoted; experimental = every batch)
     "ignore_agent_updates": False,  # keep WebUI update notices but suppress Agent update checks
     "whats_new_summary_enabled": False,  # show an LLM-written What's New summary before diff links

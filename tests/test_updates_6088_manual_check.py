@@ -2,8 +2,12 @@
 when automatic update checking is disabled."""
 import io
 import json
+from pathlib import Path
 from urllib.parse import urlparse
 
+import pytest
+
+import api.config as config
 import api.routes as routes
 
 
@@ -82,3 +86,12 @@ def test_updates_check_enabled_runs_check_without_force(monkeypatch):
     """With check_for_updates on, a normal POST runs the real check (no regression)."""
     cap = _run_updates_check(monkeypatch, check_for_updates_enabled=True, body={})
     assert cap.get("ok") == {"reached_real_check": True}, cap
+
+
+def test_automatic_update_checks_default_off_for_unconfigured_install(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A fresh HumR deployment should not offer users upstream updates."""
+    monkeypatch.setattr(config, "SETTINGS_FILE", tmp_path / "settings.json")
+
+    assert config.load_settings()["check_for_updates"] is False
