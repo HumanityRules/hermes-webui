@@ -1,3 +1,8 @@
+> **HumanityRules fork** — this repository is [HumanityRules](https://humanityrules.io)' vendored fork of
+> [nesquena/hermes-webui](https://github.com/nesquena/hermes-webui). The default branch `humr/main`
+> is the upstream release we ship plus our `humr:`-prefixed patches. For Hermes WebUI itself — issues,
+> docs, releases — head upstream.
+
 # Hermes Web UI
 
 [Hermes Agent](https://hermes-agent.nousresearch.com/) is a sophisticated autonomous agent that lives on your server, accessed via a terminal or messaging apps, that remembers what it learns and gets more capable the longer it runs.
